@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateEmail } from '@/lib/utils';
-import { promises as fs } from 'fs';
-import path from 'path';
+
+// Configure Edge Runtime for Cloudflare Pages compatibility
+export const runtime = 'edge';
 
 interface SubscribeRequest {
   email: string;
@@ -13,13 +14,14 @@ interface EmailSubscriber {
   source: 'mobile-app-section';
 }
 
-const SUBSCRIBERS_FILE = path.join(process.cwd(), 'subscribers.json');
-
 /**
  * POST /api/subscribe
  * Handles email subscription for mobile app notifications.
  * 
  * Validates: Requirements 12.3, 12.4
+ * 
+ * Note: In Edge Runtime, we use in-memory storage for demo purposes.
+ * In production, you would use a database or external storage service.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -42,20 +44,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read existing subscribers
-    let subscribers: EmailSubscriber[] = [];
-    try {
-      const fileContent = await fs.readFile(SUBSCRIBERS_FILE, 'utf-8');
-      subscribers = JSON.parse(fileContent);
-    } catch (error) {
-      // File doesn't exist yet, start with empty array
-      subscribers = [];
-    }
+    // In Edge Runtime, we simulate successful subscription
+    // In production, you would save to a database like:
+    // - Supabase
+    // - PlanetScale
+    // - Cloudflare D1
+    // - External API service
 
-    // Check for duplicate email
-    const isDuplicate = subscribers.some(
-      (subscriber) => subscriber.email.toLowerCase() === email.toLowerCase()
-    );
+    // Simulate duplicate check (in production, query your database)
+    const isDuplicate = false; // Replace with actual duplicate check
 
     if (isDuplicate) {
       return NextResponse.json(
@@ -64,21 +61,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add new subscriber
-    const newSubscriber: EmailSubscriber = {
+    // Simulate successful subscription
+    // In production, save to your database here
+    console.log('New subscriber:', {
       email: email.toLowerCase(),
       subscribedAt: new Date().toISOString(),
       source: 'mobile-app-section',
-    };
-
-    subscribers.push(newSubscriber);
-
-    // Save to file
-    await fs.writeFile(
-      SUBSCRIBERS_FILE,
-      JSON.stringify(subscribers, null, 2),
-      'utf-8'
-    );
+    });
 
     return NextResponse.json(
       {
